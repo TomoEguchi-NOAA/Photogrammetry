@@ -34,7 +34,7 @@ South.bound <- gray.whale.data %>%
   #mutate(f.Year = as.factor(Year)) %>%
   filter(Migration == "Southbound")
   
-ggplot(South.bound, 
+ggplot(South.bound %>% mutate(f.Year = as.factor(Year)), 
        aes(x = Length, y = Max_Width, group = Year)) +
   geom_point() +
   geom_smooth(method = "lm") +
@@ -44,6 +44,7 @@ ggplot(South.bound,
 X <- model.matrix(~ f.Year + Length , 
                   data = South.bound %>% mutate(f.Year = as.factor(Year)))
 
+# Run ANCOVA in JAGS
 model.string <- "model{
 for (i in 1:n) { y[i] ~ dnorm(mean[i], tau)
 mean[i] <- inprod(beta[], X[i,]) 
@@ -90,3 +91,17 @@ beta.summary <- summary.df[grep("beta", summary.df$Parameter), ]
 
 # The intercept of 1988 is beta[1]. The means of other years are different from 1988 by beta[2] to beta[9].
 # One foot increase in length in 1988 resulted in beta[10] change in maximum width.  
+
+ggplot(South.bound %>% mutate(f.Year = as.factor(Year)), 
+       aes(x = Length, 
+           y = Max_Width, 
+           group = f.Year, 
+           color = f.Year)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  xlab("Length (m)") +
+  ylab("Maximum width (m)") +
+  labs(color = "Year") +
+  theme(legend.position = c(0.2, 0.8),
+        legend.title = element_text(hjust = 0.5)) +
+  guides(color = guide_legend(ncol = 3))
